@@ -1,0 +1,203 @@
+<html>
+	<head>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js"></script>
+		<link  href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/themes/flick/jquery-ui.css" rel="stylesheet" type="text/css" /> 
+
+		<script>
+			// -------------------------------------------------------------------------
+			// DailyCred REST Api Encapsulation Object
+			// -------------------------------------------------------------------------
+			var DailyCred = function(sClientId){
+				// if not provided use the demo client_id
+				this.sClientId      = sClientId;
+				this.sUrlSignUp     = "https://www.dailycred.com/user/api/signup.json";
+				this.sUrlSignIn     = "https://www.dailycred.com/user/api/signin.json";
+				this.sUrlForgotPass = "https://www.dailycred.com/password/api/reset";
+			};
+
+			DailyCred.prototype.fApiCall = function(sUrl,aPayload,fCallback){
+				$.ajax(
+					{
+						url         : sUrl,
+						data        : aPayload,
+						dataType    : "json",
+						type        : "POST",
+						success     : function(a) {
+							if (a instanceof Object && a["worked"]){
+								fCallback(null,a);
+							}
+							else{
+								fCallback(a);
+							}
+						},
+						error       : function(err) {
+							fCallback(err);
+						}
+					}
+				);
+			};
+
+			DailyCred.prototype.fLogIn = function(sEmail, sPassword, fCallback){
+				this.fApiCall(
+					this.sUrlSignIn,
+					{
+						"client_id" : this.sClientId,
+						"email"     : sEmail,
+						"pass"      : sPassword
+					},
+					fCallback
+				);
+			};
+
+			DailyCred.prototype.fSignUp = function(sEmail, sPassword, fCallback){
+				this.fApiCall(
+					this.sUrlSignUp,
+					{
+						"client_id" : this.sClientId,
+						"email"     : sEmail,
+						"pass"      : sPassword
+					},
+					fCallback
+				);
+			};
+
+			DailyCred.prototype.fRecoverLostPassword = function(sEmail, fCallback){
+				this.fApiCall(
+					this.sUrlForgotPass,
+					{
+						"client_id" : this.sClientId,
+						"user"      : sEmail // DailyCred strangeness. We send email as user
+					},
+					fCallback
+				);
+			};
+
+		</script>
+
+
+
+		<script>
+			// Set up the UI
+			(function(){
+				// -------------------------------------------------------------------------
+				$(document).ready(function(){
+					fSetupTabs();
+
+					var dailycred = new DailyCred("fc28555a-242b-4202-ab88-43ea08c6c35c");
+					fSetupLogin(dailycred);
+					fSetupSignup(dailycred);
+					fSetupRecover(dailycred);
+				});
+			
+				// -------------------------------------------------------------------------
+				var fSetupTabs = function(){
+					$("#logintabs").tabs();
+				};
+			
+				// -------------------------------------------------------------------------
+				var fSetupLogin = function(dailycred){
+					$(".loginform").submit(function(){
+
+						dailycred.fLogIn(  
+							$(this).find(".email").val(),
+							$(this).find(".password").val(),
+							function(err,a){
+								if (err){
+									// put your failure code here
+									document.write("ERROR: " + JSON.stringify(err));
+								}
+								else{
+									// put your success code here
+									document.write("SUCCESS: " + JSON.stringify(a));
+								}
+							}
+						);
+			
+						return false;
+					});
+				};
+			
+				// -------------------------------------------------------------------------
+				var fSetupSignup = function(dailycred){
+					$(".signupform").submit(function(){
+						dailycred.fSignUp(  
+							$(this).find(".email").val(),
+							$(this).find(".password").val(),
+							function(err,a){
+								if (err){
+									// put your failure code here
+									document.write("ERROR: " + JSON.stringify(err));
+								}
+								else{
+									// put your success code here
+									document.write("SUCCESS: " + JSON.stringify(a));
+								}
+							}
+						);
+			
+						return false;
+					});
+				};
+			
+				// -------------------------------------------------------------------------
+				var fSetupRecover = function(dailycred){
+					$(".recoverform").submit(function(){
+						dailycred.fRecoverLostPassword(  
+							$(this).find(".email").val(),
+							function(err,a){
+								if (err){
+									// put your failure code here
+									document.write("ERROR: " + JSON.stringify(err));
+								}
+								else{
+									// put your success code here
+									document.write("SUCCESS: " + JSON.stringify(a));
+								}
+							}
+						);
+			
+						return false;
+					});
+				};
+			
+			})();
+		</script>
+
+	</head>
+	<body>
+		<div id="logintabs">
+			<ul>
+				<li><a href="#login">Log In</a></li>
+				<li><a href="#signup">Sign Up</a></li>
+				<li><a href="#recover">Recover Password</a></li>
+			</ul>
+			
+			<div id="login">
+				<form class="loginform">
+					Email <input class="email">
+					Password <input class="password" type="password">
+					<input class="submit" type="submit" value="Log In">
+				</form>
+				
+			</div>
+			
+			<div id="recover">
+				<form class="recoverform">
+					Email <input class="email">
+					<input class="submit" type="submit" value="Send E-Mail">
+				</form>
+			</div>
+			
+			<div id="signup">
+				<form class="signupform">
+					Email <input class="email">
+					Password<input class="password" type="password">
+					<input class="submit" type="submit" value="Sign Up">
+			</form>
+			</div>
+
+			</div>
+
+	</body>
+</html>
